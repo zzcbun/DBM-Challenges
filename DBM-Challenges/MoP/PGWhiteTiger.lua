@@ -1,9 +1,16 @@
+-- 泰坦重铸时光服-时光2-法师-旺仔芒果/椰奶冻-2026.11.13--
 local mod	= DBM:NewMod("d640", "DBM-Challenges", 4, nil, function(t)
-	return string.match(t, "[^:]+:%s?(.*)")
+	local name = string.match(t, "[^:]+:%s?(.*)") or t
+	if not name or name == "" or name == "d640" then
+		local L = DBM:GetModLocalization("d640")
+		name = (L and L.general and L.general.name) or "试炼场"
+	end
+	return name
 end)
 local L		= mod:GetLocalizedStrings()
 
-mod:SetRevision("@file-date-integer@")
+mod:SetRevision("20260919193459")
+mod:DisableHardcodedOptions()
 mod.noStatistics = true
 
 --mod:RegisterCombat("scenario", 1148)
@@ -31,20 +38,20 @@ local warnAquaBomb			= mod:NewTargetAnnounce(145206, 3)
 local warnBurrow			= mod:NewTargetAnnounce(145260, 2)
 
 --Tank
-local specWarnPyroBlast		= mod:NewSpecialWarningInterrupt(147601, false, nil, nil, 1, 2)
-local specWarnInvokeLava	= mod:NewSpecialWarningSpell(144374, nil, nil, nil, 2, 2)
-local specWarnInvokeLavaSIS	= mod:NewSpecialWarningMove(144383, nil, nil, nil, 1, 2)
-local specWarnWindBlast		= mod:NewSpecialWarningSpell(144106, nil, nil, nil, 2, 2)
-local specWarnAmbusher		= mod:NewSpecialWarningSwitch(144086, nil, nil, nil, 1, 2)
-local specWarnPowerfulSlam	= mod:NewSpecialWarningMove(144401, nil, nil, nil, 1, 2)
+local specWarnPyroBlast		= mod:NewSpecialWarningInterrupt(147601, false, nil, nil, 1, 2, nil, nil, "kickcast")
+local specWarnInvokeLava	= mod:NewSpecialWarningSpell(144374, nil, nil, nil, 2, 2, nil, nil, "watchstep")
+local specWarnInvokeLavaSIS	= mod:NewSpecialWarningMove(144383, nil, nil, nil, 1, 2, nil, nil, "runaway")
+local specWarnWindBlast		= mod:NewSpecialWarningSpell(144106, nil, nil, nil, 2, 2, nil, nil, "carefly")
+local specWarnAmbusher		= mod:NewSpecialWarningSwitch(144086, nil, nil, nil, 1, 2, nil, nil, "targetchange")
+local specWarnPowerfulSlam	= mod:NewSpecialWarningMove(144401, nil, nil, nil, 1, 2, nil, nil, "shockwave")
 --Damager
-local specWarnAmberGlob		= mod:NewSpecialWarningSpell(142189, nil, nil, nil, 1, 2)
-local specWarnHealIllusion	= mod:NewSpecialWarningInterrupt(142238, nil, nil, nil, 1, 2)
-local specWarnBanshee		= mod:NewSpecialWarningSwitch(142838, nil, nil, nil, 1, 2)
+local specWarnAmberGlob		= mod:NewSpecialWarningSpell(142189, nil, nil, nil, 1, 2, nil, nil, "watchorb")
+local specWarnHealIllusion	= mod:NewSpecialWarningInterrupt(142238, nil, nil, nil, 1, 2, nil, nil, "kickcast")
+local specWarnBanshee		= mod:NewSpecialWarningSwitch(142838, nil, nil, nil, 1, 2, nil, nil, "targetchange")
 --Healer
-local specWarnStinger		= mod:NewSpecialWarningSwitch(145198, false, nil, nil, 1, 2)
-local specWarnSonicBlast	= mod:NewSpecialWarningInterrupt(145200, false, nil, nil, 1, 2)--have to be pretty damn fast to interrupt this, off by default and for the very skilled mainly
-local specWarnAquaBomb		= mod:NewSpecialWarningTarget(145206, nil, nil, nil, 1, 2)--It's cast too often to dispel them off, so it's better as a target warning.
+local specWarnStinger		= mod:NewSpecialWarningSwitch(145198, false, nil, nil, 1, 2, nil, nil, "targetchange")
+local specWarnSonicBlast	= mod:NewSpecialWarningInterrupt(145200, false, nil, nil, 1, 2, nil, nil, "kickcast")--have to be pretty damn fast to interrupt this, off by default and for the very skilled mainly
+local specWarnAquaBomb		= mod:NewSpecialWarningTarget(145206, nil, nil, nil, 1, 2, nil, nil, "targetchange")--It's cast too often to dispel them off, so it's better as a target warning.
 
 --Tank
 local timerWindBlastCD		= mod:NewCDNPTimer(17.7, 144106, nil, nil, nil, 5)
@@ -220,6 +227,10 @@ do
 				name = Ambiguate(name, "none")
 				local diffID, currWave = C_Scenario.GetProvingGroundsInfo()--, maxWave, duration
 				local message = L.ReplyWhisper:format(UnitName("player"), mode[diffID], currWave)
+				if self:IsRestricted() then
+					--Post midnight yell restrictions in instances
+					return
+				end
 				if msg == "status" then
 					SendChatMessage(message, "WHISPER", nil, name)
 				elseif self:AntiSpam(20, name) then--If not "status" then auto respond only once per 20 seconds per person.
